@@ -37,3 +37,10 @@ images:
         tag: v0.11.0_vmware.1
 release:
     version: v1.1.0
+tkg:
+    regions:
+      - name: tkg-mgmt-aws-20200604061444
+        context: tkg-mgmt-aws-20200604061444-admin@tkg-mgmt-aws-20200604061444
+        file: /home/ubuntu/.kube-tkg/config
+        isCurrentContext: false
+    current-region-context: tkg-mgmt-aws-20200604061444-admin@tkg-mgmt-aws-20200604061444

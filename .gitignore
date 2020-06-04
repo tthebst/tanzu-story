@@ -1,6 +1,10 @@
 default.pem
 core.harbor.internal.key
 ca.key
+ca.crt
+ca.srl
+aws/
+get-docker.sh
 core.harbor.internal.csr
 core.harbor.internal.crt
 .DS_Store
