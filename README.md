@@ -20,6 +20,7 @@ Preconfigure AWS credentials to start tkg
 bash ./create-creds.sh <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY> <AWS_REGION>
 tkg init --infrastructure=aws --plan=dev  --config config.yaml
 tkg create cluster tkg-demo --plan=dev --config config.yaml
+tkg get credentials tkg-demo --config config.yaml 
 ```
 
 
@@ -27,18 +28,16 @@ tkg create cluster tkg-demo --plan=dev --config config.yaml
 Create ebs storage class:
 
 ```
-kubectl apply -f store-class.yml
+kubec
 ```
 
 Deploy Harbor. But first created tls certificates and deploy them as a secret to kubernetes and add harbor to trusted CA
 ```
-sh ./gen-cert.sh
+sudo certbot certonly --standalone
+sudo kubectl create secret generic tls-harbor --from-file=tls.crt=/etc/letsencrypt/live/harbor.tanzudemo.ml/fullchain.pem --from-file=tls.key=/etc/letsencrypt/live/harbor.tanzudemo.ml/privkey.pem
 
-helm install harbor harbor/harbor --set harborAdminPassword=secretharbor --set expose.type=loadBalancer --set expose.tls.secretName=tls-harbor --set expose.ingress.hosts.core=core.harbor.internal --set externalURL=https://core.harbor.internal
-sudo cp core.harbor.internal.crt /usr/share/ca-certificates/core.harbor.internal.crt
-sudo bash -c "echo core.harbor.internal.crt >>  /etc/ca-certificates.conf"
-sudo update-ca-certificates --fresh
-curl https://core.harbor.internal
+
+helm install harbor harbor/harbor --set harborAdminPassword=secretharbor --set expose.type=loadBalancer --set expose.tls.secretName=tls-harbor --set expose.ingress.hosts.core=harbor.tanzudemo.ml --set externalURL=https://harbor.tanzudemo.ml
 ```
 
 
@@ -50,11 +49,12 @@ Go to Route53 and create an zone "internal" and connect it to the VPC of the ubu
 kubectl get svc harbor
 ```
 
-Now go to core.harbor.internal and add a project for your buildservice named build-service
+Now go to harbor.tanzudemo.ml and add a project for your buildservice named build-service
 
 ```
-docker login core.harbor.internal/build-service
-duffle relocate -f ~/build-service-0.1.0.tgz -m /tmp/relocated.json -p core.harbor.internal/build-service
+docker login harbor.tanzudemo.ml/build-service
+duffle relocate -f ~/build-service-0.1.0.tgz -m /tmp/relocated.json -p harbor.tanzudemo.ml/build-service
+duffle install -v build-service -c credentials.yaml --set kubernetes_env=tkg-demo --set docker_registry=harbor.tanzudemo.ml --set docker_repository=harbor.tanzudemo.ml/build-service --set registry_username=admin --set registry_password=secretharbor --set custom_builder_image=test -f ~/build-service-0.1.0.tgz  -m /tmp/relocated.json
 ```
 
 
@@ -62,6 +62,18 @@ duffle relocate -f ~/build-service-0.1.0.tgz -m /tmp/relocated.json -p core.harb
 
 
 helm install concourse concourse/concourse --set web.service.type=LoadBalancer
+```
+
+
+
+Install certbor on ubuntu:
+```
+sudo apt-get update
+sudo apt-get install software-properties-common
+sudo add-apt-repository universe
+sudo add-apt-repository ppa:certbot/certbot
+sudo apt-get update
+sudo apt-get install certbot
 ```
 
 

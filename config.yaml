@@ -39,8 +39,8 @@ release:
     version: v1.1.0
 tkg:
     regions:
-      - name: tkg-mgmt-aws-20200604061444
-        context: tkg-mgmt-aws-20200604061444-admin@tkg-mgmt-aws-20200604061444
+      - name: tkg-mgmt-aws-20200608063943
+        context: tkg-mgmt-aws-20200608063943-admin@tkg-mgmt-aws-20200608063943
         file: /home/ubuntu/.kube-tkg/config
         isCurrentContext: false
-    current-region-context: tkg-mgmt-aws-20200604061444-admin@tkg-mgmt-aws-20200604061444
+    current-region-context: "tkg-mgmt-aws-20200608063943-admin@tkg-mgmt-aws-20200608063943"
