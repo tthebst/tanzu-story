@@ -1,0 +1,3 @@
+registry: harbor.tanzudemo.ml
+username: admin
+password: secretharbor

@@ -17,6 +17,7 @@ Requirements:
 Preconfigure AWS credentials to start tkg
 
 ```
+clusterawsadm alpha bootstrap create-stack
 bash ./create-creds.sh <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY> <AWS_REGION>
 tkg init --infrastructure=aws --plan=dev  --config config.yaml
 tkg create cluster tkg-demo --plan=dev --config config.yaml
@@ -28,7 +29,7 @@ tkg get credentials tkg-demo --config config.yaml
 Create ebs storage class:
 
 ```
-kubec
+kubectl apply -f store-class.yml
 ```
 
 Deploy Harbor. But first created tls certificates and deploy them as a secret to kubernetes and add harbor to trusted CA
@@ -54,13 +55,20 @@ Now go to harbor.tanzudemo.ml and add a project for your buildservice named buil
 ```
 docker login harbor.tanzudemo.ml/build-service
 duffle relocate -f ~/build-service-0.1.0.tgz -m /tmp/relocated.json -p harbor.tanzudemo.ml/build-service
-duffle install -v build-service -c credentials.yaml --set kubernetes_env=tkg-demo --set docker_registry=harbor.tanzudemo.ml --set docker_repository=harbor.tanzudemo.ml/build-service --set registry_username=admin --set registry_password=secretharbor --set custom_builder_image=test -f ~/build-service-0.1.0.tgz  -m /tmp/relocated.json
+sudo duffle install -v build-service -c credentials.yaml --set kubernetes_env=tkg-demo --set docker_registry=harbor.tanzudemo.ml --set docker_repository=harbor.tanzudemo.ml/build-service --set registry_username=admin --set registry_password=secretharbor --set custom_builder_image=harbor.tanzudemo.ml/build-service/default-builder -f ~/build-service-0.1.0.tgz  -m /tmp/relocated.json
+```
+
+Build Petclinic on TBS:
+```
+pb secrets registry apply -f registry-creds.yaml
+pb image apply -f buildservice/example-build.yaml
 ```
 
 
 
 
 
+```
 helm install concourse concourse/concourse --set web.service.type=LoadBalancer
 ```
 
@@ -77,9 +85,18 @@ sudo apt-get install certbot
 ```
 
 
+Harbor2 bugfix 
 
-forward browser:
+```
+kubectl set env deployment/kpack-controller -n kpack LIFECYCLE_IMAGE=kpack/lifecycle-080@sha256:8b0dea6d3ac03a2d4a2e6728e64ae0d6bf15bf619d4bfbe9ddd70e0fcd7909bc
+```
 
+
+
+Connect local browser 
+```
 ssh -vv -ND 8888 -i "default.pem" ubuntu@ec2-3-127-107-117.eu-central-1.compute.amazonaws.com
-
+```
 firefox-> prefrences->networksettings-> Manual Proxy config-> SOCKS Host-> localhost 8888-> OK
+
+[proxy localhost](https://stackoverflow.com/questions/57419408/how-to-make-firefox-use-a-proxy-server-for-localhost-connections)

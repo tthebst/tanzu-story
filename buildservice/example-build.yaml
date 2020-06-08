@@ -1,0 +1,6 @@
+source:
+  git:
+    url: https://github.com/spring-projects/spring-petclinic
+    revision: master
+image:
+  tag: harbor.tanzudemo.ml/build-service/petclinic
