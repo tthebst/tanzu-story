@@ -3,4 +3,4 @@ source:
     url: https://github.com/spring-projects/spring-petclinic
     revision: master
 image:
-  tag: harbor.tanzudemo.ml/build-service/petclinic
+  tag: harbor.tanzudemo.ml/builds/petclinic

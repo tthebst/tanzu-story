@@ -1,0 +1,6 @@
+source:
+  git:
+    url: https://github.com/gothinkster/node-express-realworld-example-app
+    revision: master
+image:
+  tag: harbor.tanzudemo.ml/builds/nodejs

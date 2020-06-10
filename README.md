@@ -47,7 +47,7 @@ sudo certbot certonly --standalone //harbor.tanzudemo.ml
 sudo kubectl create secret tls tls-harbor --cert=/etc/letsencrypt/live/harbor.tanzudemo.ml/fullchain.pem --key=/etc/letsencrypt/live/harbor.tanzudemo.ml/privkey.pem
 
 
-helm install harbor harbor/harbor --set harborAdminPassword=secretharbor --set expose.tls.secretName=tls-harbor --set expose.ingress.hosts.core=harbor.tanzudemo.ml --set externalURL=https://harbor.tanzudemo.ml --set core.secretName=tls-harbor
+helm install harbor harbor/harbor --set harborAdminPassword=secretharbor --set expose.tls.secretName=tls-harbor --set expose.ingress.hosts.core=harbor.tanzudemo.ml --set externalURL=https://harbor.tanzudemo.ml 
 ```
 
 
@@ -69,6 +69,7 @@ sudo duffle install -v build-service -c credentials.yaml --set kubernetes_env=tk
 
 Build Petclinic on TBS:
 ```
+
 pb secrets registry apply -f registry-creds.yaml
 pb image apply -f buildservice/example-build.yaml
 ```
