@@ -17,14 +17,14 @@ It is recommended that you use ubuntu as a jumbox and add at least 20GB storage.
 - [clusterawsadm]("https://www.vmware.com/go/get-tkg)
 - [TKG](https://www.vmware.com/go/get-tkg)
 - [duffle](https://network.pivotal.io/products/build-service)
-- [pb](https://network.pivotal.io/products/build-service)</a> 
+- [pb](https://network.pivotal.io/products/build-service)</a>
 - [build-service-0.1.0.tgz](https://network.pivotal.io/products/build-service)</a>
 
 ### Initial TKG setup
 
 First we need to have a working TKG cluster. This is mostly the same as in the TKG [documentation](https://docs.vmware.com/en/VMware-Tanzu-Kubernetes-Grid/1.1/vmware-tanzu-kubernetes-grid-11/GUID-index.html).
 
-``` bash
+```bash
 clusterawsadm alpha bootstrap create-stack
 bash ./create-creds.sh <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY> <AWS_REGION>
 tkg init --infrastructure=aws --plan=dev  --config config.yaml
@@ -38,7 +38,7 @@ kubectl config use-context <CONTEXT NAME>
 
 This will give kubernetes do dynamically provision volumes for deployments.
 
-``` bash
+```bash
 kubectl apply -f store-class.yml
 ```
 
@@ -46,26 +46,32 @@ kubectl apply -f store-class.yml
 
 Deploy [contour](https://projectcontour.io/)
 
-``` bash
+```bash
 helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 helm repo update
 helm install contour stable/contour
 ```
 
+## Create Certificates for Concourse && Harbor
+
+To make things easier it is a good idea to use certificates everywhere. The easiest way to do this is to get yourself a domain and issue certificates for this domain. If you are using AWS it is a good idea to use Route53.
+
+1. Go to [freenom](freenom.com) to get a free domain name
+2.
 
 Deploy Harbor. But first created tls certificates and deploy them as a secret to kubernetes and add harbor to trusted CA
+
 ```
 sudo certbot certonly --standalone //harbor.tanzudemo.ml
 sudo kubectl create secret tls tls-harbor --cert=/etc/letsencrypt/live/harbor.tanzudemo.ml/fullchain.pem --key=/etc/letsencrypt/live/harbor.tanzudemo.ml/privkey.pem
 
 
-helm install harbor harbor/harbor --set harborAdminPassword=secretharbor --set expose.tls.secretName=tls-harbor --set expose.ingress.hosts.core=harbor.tanzudemo.ml --set externalURL=https://harbor.tanzudemo.ml 
+helm install harbor harbor/harbor --set harborAdminPassword=secretharbor --set expose.tls.secretName=tls-harbor --set expose.ingress.hosts.core=harbor.tanzudemo.ml --set externalURL=https://harbor.tanzudemo.ml
 ```
-
 
 ### Prepare repository for build service:
 
-Go to Route53 and create an zone "internal" and connect it to the VPC of the ubuntu jumpbox. In the zone add a CNAME record with the FQDN of the ELB of  harbor
+Go to Route53 and create an zone "internal" and connect it to the VPC of the ubuntu jumpbox. In the zone add a CNAME record with the FQDN of the ELB of harbor
 
 ```
 kubectl get svc harbor
@@ -80,15 +86,14 @@ sudo duffle install -v build-service -c credentials.yaml --set kubernetes_env=tk
 ```
 
 Build Petclinic on TBS:
+
 ```
 rm /tmp/relocated.json > /dev/null
 pb secrets registry apply -f registry-creds.yaml
 pb image apply -f buildservice/example-build.yaml
 ```
 
-
 ### Concourse
-
 
 ```
 sudo certbot certonly --standalone //cicd.tanzudemo.ml
@@ -98,11 +103,10 @@ helm repo update
 helm install concourse concourse/concourse -f concourse/values.yaml
 ```
 
-
-
 ### General Tips
 
 Install certbor on ubuntu:
+
 ```
 sudo apt-get update
 sudo apt-get install software-properties-common
@@ -112,19 +116,18 @@ sudo apt-get update
 sudo apt-get install certbot
 ```
 
-
-Harbor2 bugfix 
+Harbor2 bugfix
 
 ```
 kubectl set env deployment/kpack-controller -n kpack LIFECYCLE_IMAGE=kpack/lifecycle-080@sha256:8b0dea6d3ac03a2d4a2e6728e64ae0d6bf15bf619d4bfbe9ddd70e0fcd7909bc
 ```
 
+Connect local browser
 
-
-Connect local browser 
 ```
 ssh -vv -ND 8888 -i "default.pem" ubuntu@ec2-3-127-107-117.eu-central-1.compute.amazonaws.com
 ```
+
 firefox-> prefrences->networksettings-> Manual Proxy config-> SOCKS Host-> localhost 8888-> OK
 
 [proxy localhost](https://stackoverflow.com/questions/57419408/how-to-make-firefox-use-a-proxy-server-for-localhost-connections)
