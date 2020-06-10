@@ -1,45 +1,60 @@
-# HOW TO
+<a href="http://vmware.com"><img style="width: 10em;" src="https://logos-download.com/wp-content/uploads/2016/09/VMware_logo-700x107.png" title="FVCproductions" alt="FVCproductions"></a>
 
-### On jumpbox
+# TANZU STORY SETUP
 
-Requirements:
-- Docker
-- Kubeclt (sudo snap install kubectl --classic)
-- AWS cli
-- jq 
-- clusterawsadm
-- tkg
-- duffle
-- pb
-- build-service-0.1.0.tgz
-- 20GB storage
+These are the instruction to setup the tanzu-story demo. In general you need a jumpbox from where you control everything. As of now this tutorial is only for TKG on AWS.
+---
 
-Preconfigure AWS credentials to start tkg
 
-```
+
+## Jumpbox setup
+
+It is recommended that you use ubuntu as a jumbox and add at least 20GB storage.
+
+### Requirements
+
+- [Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script)
+- kubeclt (sudo snap install kubectl --classic)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+- jq (sudo apt install jq)
+- [clusterawsadm]("https://www.vmware.com/go/get-tkg)
+- [TKG](https://www.vmware.com/go/get-tkg)
+- [duffle](https://network.pivotal.io/products/build-service)
+- [pb](https://network.pivotal.io/products/build-service)</a> 
+- [build-service-0.1.0.tgz](https://network.pivotal.io/products/build-service)</a>
+
+### Initial TKG setup
+
+First we need to have a working TKG cluster. This is mostly the same as in the TKG [documentation](https://docs.vmware.com/en/VMware-Tanzu-Kubernetes-Grid/1.1/vmware-tanzu-kubernetes-grid-11/GUID-index.html).
+
+``` bash
 clusterawsadm alpha bootstrap create-stack
 bash ./create-creds.sh <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY> <AWS_REGION>
 tkg init --infrastructure=aws --plan=dev  --config config.yaml
 tkg create cluster tkg-demo --plan=dev --config config.yaml
-tkg get credentials tkg-demo --config config.yaml 
+tkg get credentials tkg-demo --config config.yaml
 tkg get cluster tkg-demo --config config.yaml
 kubectl config use-context <CONTEXT NAME>
 ```
 
+### Create Storage Class for persistence
 
+This will give kubernetes do dynamically provision volumes for deployments.
 
-Create ebs storage class:
-
-```
+``` bash
 kubectl apply -f store-class.yml
 ```
 
-Deploy contour && add service endpoint to Route53:
-```
+## Deploy internet facing Load Balancer
+
+Deploy [contour](https://projectcontour.io/)
+
+``` bash
 helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 helm repo update
 helm install contour stable/contour
 ```
+
 
 Deploy Harbor. But first created tls certificates and deploy them as a secret to kubernetes and add harbor to trusted CA
 ```
