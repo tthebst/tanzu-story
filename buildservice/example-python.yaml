@@ -1,0 +1,6 @@
+source:
+  git:
+    url: https://github.com/flaskbb/flaskbb
+    revision: master
+image:
+  tag: harbor.tanzudemo.ml/build-service/python

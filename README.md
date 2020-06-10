@@ -69,7 +69,7 @@ sudo duffle install -v build-service -c credentials.yaml --set kubernetes_env=tk
 
 Build Petclinic on TBS:
 ```
-
+rm /tmp/relocated.json > /dev/null
 pb secrets registry apply -f registry-creds.yaml
 pb image apply -f buildservice/example-build.yaml
 ```
