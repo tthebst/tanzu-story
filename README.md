@@ -3,9 +3,6 @@
 # TANZU STORY SETUP
 
 These are the instruction to setup the tanzu-story demo. In general you need a jumpbox from where you control everything. As of now this tutorial is only for TKG on AWS.
----
-
-
 
 ## Jumpbox setup
 
