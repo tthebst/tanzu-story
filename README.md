@@ -22,6 +22,8 @@ bash ./create-creds.sh <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY> <AWS_REGION>
 tkg init --infrastructure=aws --plan=dev  --config config.yaml
 tkg create cluster tkg-demo --plan=dev --config config.yaml
 tkg get credentials tkg-demo --config config.yaml 
+tkg get cluster tkg-demo --config config.yaml
+kubectl config use-context <CONTEXT NAME>
 ```
 
 
@@ -32,13 +34,20 @@ Create ebs storage class:
 kubectl apply -f store-class.yml
 ```
 
+Deploy contour && add service endpoint to Route53:
+```
+helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+helm repo update
+helm install contour stable/contour
+```
+
 Deploy Harbor. But first created tls certificates and deploy them as a secret to kubernetes and add harbor to trusted CA
 ```
-sudo certbot certonly --standalone
-sudo kubectl create secret generic tls-harbor --from-file=tls.crt=/etc/letsencrypt/live/harbor.tanzudemo.ml/fullchain.pem --from-file=tls.key=/etc/letsencrypt/live/harbor.tanzudemo.ml/privkey.pem
+sudo certbot certonly --standalone //harbor.tanzudemo.ml
+sudo kubectl create secret tls tls-harbor --cert=/etc/letsencrypt/live/harbor.tanzudemo.ml/fullchain.pem --key=/etc/letsencrypt/live/harbor.tanzudemo.ml/privkey.pem
 
 
-helm install harbor harbor/harbor --set harborAdminPassword=secretharbor --set expose.type=loadBalancer --set expose.tls.secretName=tls-harbor --set expose.ingress.hosts.core=harbor.tanzudemo.ml --set externalURL=https://harbor.tanzudemo.ml
+helm install harbor harbor/harbor --set harborAdminPassword=secretharbor --set expose.tls.secretName=tls-harbor --set expose.ingress.hosts.core=harbor.tanzudemo.ml --set externalURL=https://harbor.tanzudemo.ml --set core.secretName=tls-harbor
 ```
 
 
@@ -65,14 +74,20 @@ pb image apply -f buildservice/example-build.yaml
 ```
 
 
-
+### Concourse
 
 
 ```
-helm install concourse concourse/concourse --set web.service.type=LoadBalancer
+sudo certbot certonly --standalone //cicd.tanzudemo.ml
+sudo kubectl create secret tls concourse-web-tls --cert=/etc/letsencrypt/live/cicd.tanzudemo.ml/fullchain.pem --key=/etc/letsencrypt/live/cicd.tanzudemo.ml/privkey.pem
+helm repo add concourse https://concourse-charts.storage.googleapis.com/
+helm repo update
+helm install concourse concourse/concourse -f concourse/values.yaml
 ```
 
 
+
+### General Tips
 
 Install certbor on ubuntu:
 ```
