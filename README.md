@@ -57,9 +57,11 @@ helm install contour stable/contour
 To make things easier it is a good idea to use certificates everywhere. The easiest way to do this is to get yourself a domain and issue certificates for this domain. If you are using AWS it is a good idea to use Route53.
 
 1. Go to [freenom](freenom.com) to get a free domain name
-2.
-
-Deploy Harbor. But first created tls certificates and deploy them as a secret to kubernetes and add harbor to trusted CA
+2. Go to AWS Route53 and create hosted zone with your domain name
+3. Add A record set to your hosted which is pointing to the public IP of your jumpbox
+4. Install [Certbot](#Install certbort)
+5. `sudo certbot certonly --standalone` for harbor use harbor.\<your Domain\>
+6. `sudo certbot certonly --standalone` for concourse use cicd.\<your Domain\>
 
 ```
 sudo certbot certonly --standalone //harbor.tanzudemo.ml
@@ -103,9 +105,9 @@ helm repo update
 helm install concourse concourse/concourse -f concourse/values.yaml
 ```
 
-### General Tips
+## General Tips
 
-Install certbor on ubuntu:
+## Install certbort
 
 ```
 sudo apt-get update
