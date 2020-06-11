@@ -59,7 +59,7 @@ To make things easier it is a good idea to use certificates everywhere. The easi
 1. Go to [freenom](freenom.com) to get a free domain name
 2. Go to AWS Route53 and create hosted zone with your domain name
 3. Add A record set to your hosted which is pointing to the public IP of your jumpbox
-4. Install [Certbot](#Install certbort)
+4. Install [Certbot](<#Install\ certbort>)
 5. `sudo certbot certonly --standalone` for harbor use harbor.\<your Domain\>
 6. `sudo certbot certonly --standalone` for concourse use cicd.\<your Domain\>
 
