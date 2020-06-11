@@ -60,8 +60,10 @@ To make things easier it is a good idea to use certificates everywhere. The easi
 2. Go to AWS Route53 and create hosted zone with your domain name
 3. Add A record set to your hosted which is pointing to the public IP of your jumpbox
 4. Install [Certbot](#Install-certbort)
-5. `sudo certbot certonly --standalone` for harbor use harbor.\<your Domain\>
-6. `sudo certbot certonly --standalone` for concourse use cicd.\<your Domain\>
+5. `sudo certbot certonly --standalone` for harbor use **harbor.\<your Domain\>**
+6. `sudo certbot certonly --standalone` for concourse use **cicd.\<your Domain\>**
+7. Create harbor secret `sudo kubectl create secret tls tls-harbor --cert=/etc/letsencrypt/live/harbor**\<your Domain\>**/fullchain.pem --key=/etc/letsencrypt/live/harbor.**\<your Domain\>**/privkey.pem`
+8.
 
 ```
 sudo certbot certonly --standalone //harbor.tanzudemo.ml
