@@ -3,3 +3,6 @@
 # TANZU STORY SETUP
 
 These are the instruction to setup the tanzu-story demo. In general you need a jumpbox from where you can control everything.
+
+# [AWS SETUP](https://github.com/tthebst/tanzu-story/aws)
+# [VSPHERE SETUP](https://github.com/tthebst/tanzu-story/vsphere)
