@@ -3,5 +3,5 @@
 # TANZU STORY
 
 
-## [AWS SETUP](https://github.com/tthebst/tanzu-story/aws)
-## [VSPHERE SETUP](https://github.com/tthebst/tanzu-story/vsphere)
+## [AWS SETUP](https://github.com/tthebst/tanzu-story/tree/master/aws)
+## [VSPHERE SETUP](https://github.com/tthebst/tanzu-story/tree/master/vsphere)
