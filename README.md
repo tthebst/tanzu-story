@@ -88,11 +88,11 @@ You can now access harbor under **harbor.\<your Domain\>** with **username: admi
 Now go to your Harbor registry and add a project for your buildservice named build-service
 
 ```bash
-docker login harbor.tanzudemo.ml/build-service
+docker login harbor.<your Domain>/build-service
 
-duffle relocate -f ~/build-service-0.1.0.tgz -m /tmp/relocated.json -p harbor.tanzudemo.ml/build-service
+duffle relocate -f ~/build-service-0.1.0.tgz -m /tmp/relocated.json -p harbor.<your Domain>/build-service
 
-sudo duffle install -v build-service -c credentials.yaml --set kubernetes_env=tkg-demo --set docker_registry=harbor.tanzudemo.ml --set docker_repository=harbor.tanzudemo.ml/build-service --set registry_username=admin --set registry_password=secretharbor --set custom_builder_image=harbor.tanzudemo.ml/build-service/default-builder -f ~/build-service-0.1.0.tgz -m /tmp/relocated.json
+sudo duffle install -v build-service -c credentials.yaml --set kubernetes_env=tkg-demo --set docker_registry=harbor.<your Domain> --set docker_repository=harbor.<your Domain>/build-service --set registry_username=admin --set registry_password=secretharbor --set custom_builder_image=harbor.<your Domain>/build-service/default-builder -f ~/build-service-0.1.0.tgz -m /tmp/relocated.json
 ```
 
 Build Petclinic Demo Application with TBS. Tanzu build service will automatically detect the source code and build a container image which gets pushed to Harbor.
@@ -104,7 +104,7 @@ pb image apply -f buildservice/example-build.yaml
 
 ### Concourse
 
-Concourse is a CI/CD Platform. You can deploy it onto your cluster and access it at  **cicd.\<your Domain\>**. 
+Concourse is a CI/CD Platform. You can deploy it onto your cluster and access it at  **cicd.\<your Domain\>**.
 
 ```bash
 sudo certbot certonly --standalone //cicd.tanzudemo.ml
