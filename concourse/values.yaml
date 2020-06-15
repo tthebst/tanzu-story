@@ -23,5 +23,5 @@ web:
         hosts:
           - cicd.tanzudemo.ml
 concourse:
-    web:
-        externalUrl: https://cicd.tanzudemo.ml
+  web:
+    externalUrl: https://cicd.tanzudemo.ml
