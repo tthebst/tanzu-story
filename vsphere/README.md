@@ -2,11 +2,18 @@
 
 # TANZU STORY SETUP
 
-These are the instruction to setup the tanzu-story demo. In general you need a jumpbox from where you control everything. As of now this tutorial is only for TKG on AWS.
+These are the instruction to setup the tanzu-story demo. In general you need a jumpbox from where you control everything. As of now this tutorial is only for TKG on AWS.****
 
 ## Jumpbox setup
 
-It is recommended that you use ubuntu as a jumbox and add at least 20GB storage.
+It is recommended that you use ubuntu as a jumbox and add at least 20GB storage. With vSphere you have the multiple options to setup the jumpbox. You can use Cloud Assembly to deploy the jumpbox and the management cluster or you can deploy a jumpbox manually which is faster if you don't have a working Cloud Assembly setup.
+
+
+## Cloud Assembly
+
+There is a guide on how to setup in cloud assembly in the cloud assembly folder. The cloud assembly template which is also provided in the folder only deploys to vsphere.
+
+## Manual Jumpbox setup
 
 ### Requirements
 
