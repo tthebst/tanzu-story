@@ -15,29 +15,32 @@ There is a guide on how to setup in cloud assembly in the cloud assembly folder.
 
 ## Manual Jumpbox setup
 
+Get the ubuntu server OVA from the offical ubuntu [downloads](https://cloud-images.ubuntu.com/bionic/current/). Import and deploy this OVA into vsphere. You should configure it such that you have ssh access to the jumbpox. If you have ssh access to the ubuntu machine you can proceed to install the requirements.
+
 ### Requirements
 
 - [Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script)
 - kubeclt (sudo snap install kubectl --classic)
-- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 - jq (sudo apt install jq)
-- [clusterawsadm]("https://www.vmware.com/go/get-tkg)
-- [TKG](https://www.vmware.com/go/get-tkg)
+- [tkg cli](https://www.vmware.com/go/get-tkg)
 - [duffle](https://network.pivotal.io/products/build-service)
-- [pb](https://network.pivotal.io/products/build-service)</a>
-- [build-service-0.1.0.tgz](https://network.pivotal.io/products/build-service)</a>
+- [pb](https://network.pivotal.io/products/build-service)
+- [build-service-0.1.0.tgz](https://network.pivotal.io/products/build-service)
+- [Photon OVA](https://www.vmware.com/go/get-tkg)
+- [Proxy OVA](https://www.vmware.com/go/get-tkg)
 
 ### Initial TKG setup
 
 First we need to have a working TKG cluster. This is mostly the same as in the TKG [documentation](https://docs.vmware.com/en/VMware-Tanzu-Kubernetes-Grid/1.1/vmware-tanzu-kubernetes-grid-11/GUID-index.html).
 
+Please save the downloaded photon and haproxy ova in the **home** directory. Also fill out the variables file **variables.config**
+
 ```bash
-clusterawsadm alpha bootstrap create-stack
-bash ./create-creds.sh <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY> <AWS_REGION>
-tkg init --infrastructure=aws --plan=dev  --config config.yaml
-tkg create cluster tkg-demo --plan=dev --config config.yaml
-tkg get credentials tkg-demo --config config.yaml
-tkg get cluster tkg-demo --config config.yaml
+bash ./config.sh variables.config
+tkg init --infrastructure=vsphere --plan=dev  
+tkg create cluster tkg-demo --plan=dev
+tkg get credentials tkg-demo
+tkg get cluster tkg-demo
 kubectl config use-context <CONTEXT NAME>
 ```
 
