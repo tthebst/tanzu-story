@@ -1,0 +1,247 @@
+formatVersion: 1
+inputs:
+  env:
+    type: string
+    title: Target Cloud Environment
+  AWS_KEY_ID_S3:
+    type: string
+  AWS_SECRET_KEY_S3:
+    type: string
+  AWS_KEY_ID_COMPUTE:
+    type: string
+  AWS_SECRET_KEY_COMPUTE:
+    type: string
+  AWS_COMPUTE_REGION:
+    type: string
+  TMC_API_TOKEN:
+    type: string
+  tkg-cli:
+    default: tkg-linux-amd64-v1.1.0-vmware.1
+    type: string
+  haproxy-ova:
+    default: photon-3-haproxy-v1.2.4-vmware.1
+    type: string
+  tkg-ova:
+    default: photon-3-kube-v1.18.2-vmware.1
+    type: string
+  datastore:
+    type: string
+  vcenterIP:
+    type: string
+  vcenterUser:
+    type: string
+  vcenterPassword:
+    type: string
+  datacenterName:
+    type: string
+  resourcePool:
+    type: string
+  sshKey:
+    type: string
+resources:
+  Ubuntu_Init:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      image: Jumb-Box-A.S
+      flavor: 4gb2cpu
+      storage:
+        bootDiskCapacityInGB: 10
+        maxDiskCapacityInGB: 10
+      cloudConfig: |
+        #cloud-config
+        ssh_pwauth: True
+        users:
+          #create user tkg and add to sudo group
+          - name: tkg
+            lock_passwd: false
+            passwd: $6$rounds=4096$hiimusetkg$.zPEkNlvfHOQlEtGdQk60WNgYVZDN8rnb02YbSM.JU3/fCNCsXQ0HeyJYDkND9D9bOp/14BG9YkTgUm9AiWb30
+            ssh-authorized-keys:
+              - ssh-rsa ${input.sshKey}
+            sudo: ['ALL=(ALL) NOPASSWD:ALL']
+            groups: sudo
+            shell: /bin/bash
+        # configure ssh by specifying sshd_config file 
+        # enables password authenication and creates keys
+        write_files:
+          - path: /etc/ssh/sshd_config
+            content: |
+                 Port 22
+                 Protocol 2
+                 HostKey /etc/ssh/ssh_host_rsa_key
+                 HostKey /etc/ssh/ssh_host_dsa_key
+                 HostKey /etc/ssh/ssh_host_ecdsa_key
+                 HostKey /etc/ssh/ssh_host_ed25519_key
+                 UsePrivilegeSeparation yes
+                 KeyRegenerationInterval 3600
+                 ServerKeyBits 1024
+                 SyslogFacility AUTH
+                 LogLevel INFO
+                 LoginGraceTime 120
+                 PasswordAuthentication yes
+                 PermitRootLogin no
+                 StrictModes yes
+                 RSAAuthentication yes
+                 PubkeyAuthentication yes
+                 IgnoreRhosts yes
+                 RhostsRSAAuthentication no
+                 HostbasedAuthentication no
+                 PermitEmptyPasswords no
+                 ChallengeResponseAuthentication no
+                 X11Forwarding yes
+                 X11DisplayOffset 10
+                 PrintMotd no
+                 PrintLastLog yes
+                 TCPKeepAlive yes
+                 AcceptEnv LANG LC_*
+                 Subsystem sftp /usr/lib/openssh/sftp-server
+                 UsePAM yes
+                 AllowUsers tkg
+          #create vsphere config file for TKG vSphere MGM cluster
+          - path: /home/tkg/.tkg/config.yaml
+            content: |
+              VSPHERE_SERVER: ${input.vcenterIP}
+              VSPHERE_USERNAME: ${input.vcenterUser}
+              VSPHERE_PASSWORD: ${input.vcenterPassword}
+              VSPHERE_DATACENTER: /${input.datacenterName}
+              VSPHERE_DATASTORE: /${input.datacenterName}/datastore/${input.datastore}
+              VSPHERE_NETWORK: VM Network
+              VSPHERE_RESOURCE_POOL: /${input.datacenterName}/host/MGMT/Resources/${input.resourcePool}
+              VSPHERE_FOLDER: /${input.datacenterName}/vm/TKG
+              VSPHERE_TEMPLATE: /${input.datacenterName}/vm/TKG/${input.tkg-ova}
+              VSPHERE_HAPROXY_TEMPLATE: /${input.datacenterName}/vm/TKG/${input.haproxy-ova}
+              VSPHERE_DISK_GIB: "25"
+              VSPHERE_NUM_CPUS: "2"
+              VSPHERE_MEM_MIB: "4096"
+              VSPHERE_SSH_AUTHORIZED_KEY: ${input.sshKey}
+              SERVICE_CIDR: 100.64.0.0/13
+              CLUSTER_CIDR: 100.64.0.0/13
+            
+          #create aws config file for TKG AWS MGM cluster
+          - path: /home/tkg/aws-config.yaml
+            content: |
+              AWS_REGION: us-east-1
+              AWS_NODE_AZ: us-east-1a
+              AWS_PUBLIC_NODE_CIDR: 10.0.1.0/24
+              AWS_PRIVATE_NODE_CIDR: 10.0.0.0/24
+              AWS_VPC_CIDR: 10.0.0.0/16
+              CLUSTER_CIDR: 100.96.0.0/11
+              AWS_SSH_KEY_NAME: demo-keys
+              CONTROL_PLANE_MACHINE_TYPE: t3.small
+              NODE_MACHINE_TYPE: t3.small
+
+        #install required packages
+        packages:
+          - unzip 
+          - jq
+          - sshpass
+        runcmd:
+          #install AWS CLI
+          - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          - unzip awscliv2.zip
+          - sudo ./aws/install
+          #install GOVC
+          - curl -L https://github.com/vmware/govmomi/releases/download/v0.22.1/govc_linux_amd64.gz | gunzip > /usr/local/bin/govc
+          - chmod +x /usr/local/bin/govc
+          #install DOCKER
+          - curl -fsSL https://get.docker.com -o get-docker.sh
+          - sh get-docker.sh
+          -   sudo usermod -aG docker tkg
+          #install KUBECTL CLI
+          - snap install kubectl --classic
+          
+          # Configure AWS cli to download binaries and scripts from s3
+          - aws configure set aws_access_key_id '${input.AWS_KEY_ID_S3}'
+          - aws configure set aws_secret_access_key '${input.AWS_SECRET_KEY_S3}'
+          - aws configure set default.region eu-central-1
+          # Downlaod scripts and binaries fronm S3
+          - aws s3 presign s3://tim-tkg/${input.tkg-cli} | xargs wget -O ${input.tkg-cli}
+          - aws s3 presign s3://tim-tkg/${input.tkg-ova}.ova | xargs wget -O /home/tkg/${input.tkg-ova}.ova 
+          - aws s3 presign s3://tim-tkg/${input.haproxy-ova}.ova  | xargs wget -O  /home/tkg/${input.haproxy-ova}.ova 
+          - aws s3 presign s3://tim-tkg/clusterawsadm-linux-amd64-v0.5.2+vmware.1 | xargs wget -O clusterawsadm-linux-amd64-v0.5.2+vmware.1
+          - aws s3 presign s3://tim-tkg/vsphere-mgm.sh | xargs wget -O /home/tkg/vsphere-mgm.sh
+          - aws s3 presign s3://tim-tkg/aws-mgm.sh | xargs wget -O aws-mgm.sh
+          - aws s3 presign s3://tim-tkg/create-creds.sh | xargs wget -O create-creds.sh
+          - aws s3 presign s3://tim-tkg/tmc | xargs wget -O tmc
+          
+          
+          # make tkg cli executable and add to available binaries
+          - chmod +x /'${input.tkg-cli}'
+          - mv /'${input.tkg-cli}' /usr/local/bin/tkg
+          
+          # make tmc cli executable and add to available binaries
+          - chmod +x /tmc
+          - mv /tmc /usr/local/bin/tmc
+            
+            
+          #remove AWS credentials because now switch to AWS Compute account  
+          - rm /home/tkg/.aws/credentials
+          - rm /home/tkg/.aws/config
+          
+          # configure AWS cli to use compute AWS account
+          - aws configure set aws_access_key_id '${input.AWS_KEY_ID_COMPUTE}'
+          - aws configure set aws_secret_access_key '${input.AWS_SECRET_KEY_COMPUTE}'
+          - aws configure set default.region '${input.AWS_COMPUTE_REGION}'
+          - aws configure set region '${input.AWS_COMPUTE_REGION}'
+          # add AWS_REGION and TMC_API_TOKEN to .bashrc
+          - bash -c "echo export AWS_REGION='${input.AWS_COMPUTE_REGION}' >>/home/tkg/.bashrc"
+          - bash -c "echo export TMC_API_TOKEN='${input.TMC_API_TOKEN}' >>/home/tkg/.bashrc"
+          
+          
+          #create tmc context
+          - bash -i -c "tmc login -n tmc-context --no-configure"
+          
+          - sudo chown -R tkg /home/tkg
+          
+          #deploy MGM cluster on aws
+          - sudo chmod 777 /home/tkg/aws-mgm.sh
+          - bash /home/tkg/aws-mgm.sh
+          
+          #add AWS mc to tkg
+          - bash -i -c "tkg add management-cluster"
+          
+          #set current mc cluster to newly created AWS mc cluser  
+          - bash -i -c "tkg set mc mgm-cluster-aws"
+          
+          # add mc cluster to tmc
+          - bash -i -c "tmc cluster attach -n aws-mgm -g tim-clustergroup"
+          - bash -i -c "kubectl apply -f /home/tkg/k8s-attach-manifest.yaml"          
+          
+          # change ownership of tkg folder
+          
+          
+          
+          
+          
+          # deploy MGM cluster on vsphere
+          - chmod 777 /home/tkg/vsphere-mgm.sh
+          - bash /home/tkg/vsphere-mgm.sh ${input.vcenterUser} ${input.vcenterPassword} ${input.vcenterIP} ${input.datacenterName} ${input.tkg-ova} ${input.datastore}  ${input.resourcePool}  ${input.haproxy-ova} 
+          
+          # add vSphere mc to tkg
+          - bash -i -c "tkg add management-cluster"
+          
+          #set current mc cluster to newly created vSphere mc cluser
+          - bash -i -c "tkg set mc mgm-cluster-vsphere"
+          
+          # add mc cluster to tmc
+          - bash -i -c "tmc cluster attach -n vsphere-mgm -g tim-clustergroup"
+          - bash -i -c "kubectl apply -f /home/tkg/k8s-attach-manifest.yaml"
+
+          
+          
+      networks:
+        - network: '${resource.Cloud_vSphere_Network_1.id}'
+  Cloud_vSphere_Network_1:
+    type: Cloud.vSphere.Network
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      networkType: existing
+      name: VM Network
+      constraints:
+        - tag: 'mgmt-network:sauer'
